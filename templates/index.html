@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Support Chatbox</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .chatbox_container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+        }
+        .chatbox {
+            display: none;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .chatbox_header {
+            background: #007bff;
+            color: #fff;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        .chatbox_header .close_btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .chatbox_body {
+            height: 300px;
+            padding: 10px;
+            overflow-y: auto;
+            font-size: 14px;
+        }
+        .chatbox_footer {
+            display: flex;
+            border-top: 1px solid #ccc;
+        }
+        .chatbox_footer input {
+            flex: 1;
+            border: none;
+            padding: 10px;
+            width: 80%;
+        }
+        .chatbox_footer button {
+            border: none;
+            padding: 10px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            width: 20%;
+        }
+        .chatbox_footer form {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .toggle_chat {
+            background: #007bff;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 10px;
+            width: 50%;
+            display: inline-block;
+        }
+        .user_message {
+            background-color: #f0f0f0;
+            float: right;
+            clear: both;
+        }
+        .response_message {
+            background-color: #e0e0e0;
+            float: left;
+            clear: both;
+        }
+    </style>
+</head>
+<body>
+    <div class="chatbox_container">
+        <button class="toggle_chat" id="toggle_btn" onclick="toggle_chat()">💬</button>
+        <div class="chatbox" id="chatbox">
+            <div class="chatbox_header">
+                Support Chat
+                <button class="close_btn" onclick="toggle_chat()">✖</button>
+            </div>
+            <div class="chatbox_body" id="chatbox_body">
+                <div class="message response_message">Hello! How can I assist you today?</div>
+            </div>
+            <div class="chatbox_footer">
+                <form action="/send_message" method="POST">
+                    <input type="text" name="chat_input" id="chat_input" placeholder="Type a message...">
+                    <button id="submit" type="submit" onclick="send_message()">Send</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggle_chat() {
+            const chatbox = document.getElementById("chatbox");
+            const toggleBtn = document.getElementById("toggle_btn");
+            
+            if (chatbox.style.display === "block") {
+                chatbox.style.display = "none";
+                toggleBtn.style.display = "block";
+            } else {
+                chatbox.style.display = "block";
+                toggleBtn.style.display = "none";
+            }
+        }
+
+        function send_message() {
+            event.preventDefault(); // Prevent default form submission behavior
+          
+            const input = document.getElementById("chat_input");
+            const submitButton = document.getElementById("submit");
+            
+            // Disable the input field and submit button
+            input.disabled = true;
+            submitButton.disabled = true;
+            
+            const message = input.value.trim();
+            if (message !== "") {
+                const chatBody = document.getElementById("chatbox_body");
+                const msgElement = document.createElement("div");
+                msgElement.textContent = message;
+                msgElement.className = "message user_message";
+                chatBody.appendChild(msgElement);
+                input.value = "";
+                chatBody.scrollTop = chatBody.scrollHeight;
+            
+                const responseElement = document.createElement("div");
+                // Loading indicator
+                responseElement.textContent = "...";
+                responseElement.className = "message response_message";
+                chatBody.appendChild(responseElement);
+                chatBody.scrollTop = chatBody.scrollHeight;
+
+                fetch("/send_message", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ chat_input: message })
+                })
+                .then(response => response.json())
+                .then(data => {
+                responseElement.textContent = data.response;
+                chatBody.scrollTop = chatBody.scrollHeight;
+                });
+
+                // Disable the input field and submit button
+                input.disabled = false;
+                submitButton.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
