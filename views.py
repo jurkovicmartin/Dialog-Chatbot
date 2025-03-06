@@ -14,6 +14,8 @@ def home():
 
 @views.route("/send_message", methods=["POST"])
 def send_message():
-    question = request.form.get("chat_input")
+    data = request.get_json()
+    question = data.get("chat_input", "")
+
     response = bot.chat(question)
     return jsonify({"response": response})
